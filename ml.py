@@ -19,11 +19,11 @@ from settings import image_folder_path, batch_size, epochs, initial_learning_rat
 # Enable eager execution
 tf.config.run_functions_eagerly(True)
 
-# Define the dropout rate
-#dropout_rate = 0.5
+ Define the dropout rate
+dropout_rate = 0.5
 
-# Define the L2 regularization coefficient
-#l2_coefficient = 0.001
+ Define the L2 regularization coefficient
+l2_coefficient = 0.001
 
 # Path to the folder containing your images
 image_folder_path = r"images"
@@ -220,9 +220,7 @@ class DroopyEyelidsDetector(layers.Layer):
 
         # Define the EAR threshold and frame check
         thresh = 0.2
-
-        # Load the face detector and facial landmark predictor        
-        #predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat/shape_predictor_68_face_landmarks.dat")      
+     
 
         # Define a function to detect droopy eyelids
         def detect_droopy_eyelids(frame):
@@ -294,14 +292,8 @@ sweating_output = SweatingDetector()(image_input)
 sweating_output = tf.expand_dims(sweating_output, axis=-1)  # Add a singleton dimension for the channel
 sweating_output = layers.GlobalAveragePooling2D()(sweating_output)
 
-# Branch 5: Smile detection
-# smile_output = SmileDetector()(image_input)
-
 # Branch 6: Droopy eyelids detection
 droopy_eyelids_output = layers.Reshape((1,))(DroopyEyelidsDetector()(image_input))
-
-# Branch 7: Exaggerated frowns detection
-# exaggerated_frowns_output = layers.Dense(1, activation='sigmoid', name='exaggerated_frowns')(x)
 
 # Combine outputs with different weights
 weighted_average = layers.Average()([
@@ -309,7 +301,6 @@ weighted_average = layers.Average()([
     bloodshot_eyes_output,
     pupil_dilation_output,
     sweating_output * 0.4,  # Adjust the weight for sweating detection
-    # smile_output * 0.7 , # Adjust the weight for smile detection
     droopy_eyelids_output 
 ])
 
@@ -326,11 +317,10 @@ lr_scheduler = ReduceLROnPlateau(factor=0.1, patience=3, monitor='loss', verbose
 model.compile(optimizer=Adam(learning_rate=initial_learning_rate), loss='binary_crossentropy', metrics=['accuracy'])
 
 # Train the model using the data generator
-#model.fit(train_generator, epochs, steps_per_epoch=len(train_generator), callbacks=[lr_scheduler])
 model.fit(train_generator, epochs=epochs, steps_per_epoch=len(train_generator), callbacks=[lr_scheduler], batch_size=batch_size)
 
 # Evaluate the model on the testing data
-#test_loss, test_accuracy = model.evaluate(test_generator, steps=len(test_generator))
+
 test_loss, test_accuracy = model.evaluate(test_generator, steps=len(test_generator), batch_size=batch_size)
 print("Test Loss:", test_loss)
 print("Test Accuracy:", test_accuracy)
